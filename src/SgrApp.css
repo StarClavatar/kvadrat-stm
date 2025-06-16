@@ -370,27 +370,30 @@ body {
 .qty-display {
   padding: 0 15px;
   font-weight: 600;
-  min-width: 40px;
+  min-width: 45px;
   text-align: center;
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  background-color: #e7e7e7;
+  border-radius: 4px;
   border-bottom: 1px solid transparent;
 }
 
 .qty-display:hover {
-  border-bottom: 1px dashed #333;
+  border: 1px dashed #333;
 }
 
 .qty-input {
-  padding: 0 15px;
+  padding: 0 6px;
   font-weight: 600;
-  width: min-content;
-  max-width: 60px;
   text-align: center;
+  justify-content: center;
+  max-width: 45px;
   font-size: 16px;
+  background-color: #e7e7e7;
+  border-radius: 4px;
   border: none;
-  background: transparent;
   outline: none;
   -moz-appearance: textfield;
 }
