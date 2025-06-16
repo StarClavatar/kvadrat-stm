@@ -10,10 +10,14 @@ const Cart = React.memo(({
   onClose, 
   cartItems,
   onUpdateCount,
+  onSetQuantity,
   onClearCart
 }) => {
   const [activeView, setActiveView] = useState('cart'); // 'cart', 'form', 'success'
   const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'submitting'
+  const [submissionError, setSubmissionError] = useState(null);
+  const [editingItem, setEditingItem] = useState(null); // uniqueId of the item being edited
+  const [tempQty, setTempQty] = useState('');
   
   const { control, register, handleSubmit, formState: { errors }, reset } = useForm({
     mode: 'onBlur',
@@ -27,9 +31,14 @@ const Cart = React.memo(({
 
   const onSubmit = async (data) => {
     setSubmissionStatus('submitting');
+    setSubmissionError(null);
 
     const payload = {
-      contactInfo: data,
+      contactInfo: {
+        // !!!ВАЖНО: Замените этот email на реальный адрес получателя заявок!!!
+        email_to: "clavatar@yandex.ru", 
+        ...data
+      },
       order: cartItems.map(item => ({
         productName: item.productName,
         certificateNumber: item.certificateNumber,
@@ -40,16 +49,36 @@ const Cart = React.memo(({
     console.log("Отправляемые данные:", JSON.stringify(payload, null, 2));
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch("/api/order-send-email", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`);
+      }
+      
+      // Можно добавить обработку ответа от сервера, если он что-то возвращает
+      // const result = await response.json(); 
+      // console.log(result);
+
       setActiveView('success');
       onClearCart();
       reset(); // Сбрасываем поля формы
     } catch (error) {
       console.error("Ошибка отправки:", error);
-      // Можно было бы установить глобальную ошибку здесь
+      setSubmissionError("Не удалось отправить заявку. Пожалуйста, попробуйте еще раз.");
     } finally {
       setSubmissionStatus('idle');
     }
+  };
+
+  const handleBackToCart = () => {
+    setActiveView('cart');
+    setSubmissionError(null);
   };
 
   const handleClose = useCallback(() => {
@@ -78,6 +107,28 @@ const Cart = React.memo(({
     }
   }, [isOpen, reset]);
 
+  const handleQtyClick = (item) => {
+    setEditingItem(item.uniqueId);
+    setTempQty(item.quantity.toString());
+  };
+
+  const handleQtyChange = (e) => {
+    setTempQty(e.target.value);
+  };
+
+  const handleQtyBlur = () => {
+    if (editingItem) {
+      onSetQuantity(editingItem, tempQty);
+    }
+    setEditingItem(null);
+  };
+
+  const handleQtyKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleQtyBlur();
+      e.target.blur();
+    }
+  };
 
   if (!isOpen) {
     return null;
@@ -110,25 +161,43 @@ const Cart = React.memo(({
                 ) : (
                   <div className="cart-items-list">
                     {cartItems.map((item) => (
-                      <div key={item.certificateNumber} className="cart-item">
+                      <div key={item.uniqueId} className="cart-item">
                         <div className="cart-item-info">
                           <div className="cart-item-name">{item.productName}</div>
                         </div>
                         <div className="cart-item-controls">
                           <button
                             className="cart-qty-btn minus"
-                            onClick={() => onUpdateCount(item.certificateNumber, false)}
+                            onClick={() => onUpdateCount(item.uniqueId, false)}
                           >
                             −
                           </button>
-                          <span className="cart-qty-display">
-                            {item.quantity}
-                          </span>
+                          {editingItem === item.uniqueId ? (
+                            <input
+                              type="number"
+                              className="qty-input cart"
+                              value={tempQty}
+                              onChange={handleQtyChange}
+                              onBlur={handleQtyBlur}
+                              onKeyDown={handleQtyKeyDown}
+                              autoFocus
+                            />
+                          ) : (
+                            <span className="cart-qty-display" onClick={() => handleQtyClick(item)}>
+                              {item.quantity}
+                            </span>
+                          )}
                           <button
                             className="cart-qty-btn plus"
-                            onClick={() => onUpdateCount(item.certificateNumber, true)}
+                            onClick={() => onUpdateCount(item.uniqueId, true)}
                           >
                             +
+                          </button>
+                          <button 
+                            className="cart-item-remove-btn"
+                            onClick={() => onSetQuantity(item.uniqueId, 0)}
+                          >
+                            ×
                           </button>
                         </div>
                       </div>
@@ -148,7 +217,7 @@ const Cart = React.memo(({
           {/* View 2: Form */}
           <form className="form-view" onSubmit={handleSubmit(onSubmit)}>
             <div className="form-header">
-              <button type="button" className="back-btn" onClick={() => setActiveView('cart')}>
+              <button type="button" className="back-btn" onClick={handleBackToCart}>
                 ← Назад
               </button>
               <button type="button" className="cart-close" onClick={handleClose}>
@@ -208,6 +277,7 @@ const Cart = React.memo(({
               <button type="submit" className="cart-submit-btn" disabled={submissionStatus === 'submitting'}>
                 {submissionStatus === 'submitting' ? 'Отправка...' : <><ArrowIconButton /><span>оставить заявку</span></>}
               </button>
+              {submissionError && <p className="submission-error-message">{submissionError}</p>}
               <p className="privacy-policy">
                 Нажимая на кнопку "Отправить" вы соглашаетесь на обработку своих персональных данных и на условия политики конфиденциальности
               </p>

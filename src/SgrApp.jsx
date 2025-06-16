@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { debounce, keyBy } from 'lodash';
 import { SearchIcon } from "./assets/search-icon";
-import ExpandIcon from "./assets/expand-icon";
-import CartIcon from "./assets/cart-icon";
-import ArrowIconButton from "./assets/arrow-icon-button";
 import "./SgrApp.css";
 import ProductCard from "./ProductCard";
 import Cart from "./Cart";
@@ -10,10 +8,10 @@ import EmptyIcon from "./assets/empty-icon";
 
 const SgrApp = () => {
   const [products, setProducts] = useState([]);
+  const [productsById, setProductsById] = useState({});
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [expandedProducts, setExpandedProducts] = useState(new Set());
   const [productCounts, setProductCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
@@ -31,40 +29,54 @@ const SgrApp = () => {
   });
 
   useEffect(() => {
-    // Загружаем данные из sgr-converted.json
+    // Загружаем данные
     const loadData = async () => {
       try {
-        const response = await fetch("/sgr-converted.json");
-        const data = await response.json();
+        const response = await fetch(
+          "/api/sgr-info-get"
+        );
+        const responseData = await response.json();
 
-        setProducts(data);
+        if (responseData.result === "success") {
+          const data = responseData.data;
+          
+          const processedData = data.map((p, index) => ({
+            ...p,
+            uniqueId: p.certificateNumber || `${p.productName}-${index}`,
+          }));
 
-        // Извлекаем все уникальные категории
-        const allCategories = new Set();
-        data.forEach((product) => {
-          if (product.categories && Array.isArray(product.categories)) {
-            product.categories.forEach((category) => {
-              if (category && category.trim()) {
-                allCategories.add(category.trim());
-              }
-            });
-          }
-        });
+          setProducts(processedData);
+          setProductsById(keyBy(processedData, 'uniqueId'));
 
-        setCategories([...allCategories].sort());
-        
+          // Извлекаем все уникальные категории
+          const allCategories = new Set();
+          processedData.forEach((product) => {
+            if (product.categories && Array.isArray(product.categories)) {
+              product.categories.forEach((category) => {
+                if (category && category.trim()) {
+                  allCategories.add(category.trim());
+                }
+              });
+            }
+          });
+
+          setCategories([...allCategories].sort());
+        } else {
+          console.error("Ошибка в формате ответа:", responseData);
+        }
+
         // Загружаем состояние корзины из localStorage
-        const savedCounts = localStorage.getItem('productCounts');
-        const savedCart = localStorage.getItem('cartItems');
-        
+        const savedCounts = localStorage.getItem("productCounts");
+        const savedCart = localStorage.getItem("cartItems");
+
         if (savedCounts) {
           setProductCounts(JSON.parse(savedCounts));
         }
-        
+
         if (savedCart) {
           setCartItems(JSON.parse(savedCart));
         }
-        
+
         setIsInitialized(true);
         setLoading(false);
       } catch (error) {
@@ -75,6 +87,8 @@ const SgrApp = () => {
 
     loadData();
   }, []);
+
+  const debouncedSetSearchTerm = useCallback(debounce(setSearchTerm, 300), []);
 
   // Фильтрация товаров
   const getFilteredProducts = () => {
@@ -104,25 +118,13 @@ const SgrApp = () => {
     return filtered;
   };
 
-  const toggleProduct = useCallback((certificateNumber) => {
-    setExpandedProducts((prev) => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(certificateNumber)) {
-        newExpanded.delete(certificateNumber);
-      } else {
-        newExpanded.add(certificateNumber);
-      }
-      return newExpanded;
-    });
-  }, []);
-
-  const updateProductCount = useCallback((certificateNumber, increment) => {
+  const updateProductCount = useCallback((uniqueId, increment) => {
     setProductCounts((prev) => {
-      const currentCount = prev[certificateNumber] || 0;
+      const currentCount = prev[uniqueId] || 0;
       const newCount = increment
         ? currentCount + 1
         : Math.max(0, currentCount - 1);
-      const newCounts = { ...prev, [certificateNumber]: newCount };
+      const newCounts = { ...prev, [uniqueId]: newCount };
       
       localStorage.setItem('productCounts', JSON.stringify(newCounts));
       
@@ -139,11 +141,9 @@ const SgrApp = () => {
     if (!isInitialized || !products.length) return;
 
     const newCartItems = Object.entries(productCounts)
-      .map(([certificateNumber, quantity]) => {
+      .map(([uniqueId, quantity]) => {
         if (quantity > 0) {
-          const product = products.find(
-            (p) => p.certificateNumber === certificateNumber
-          );
+          const product = productsById[uniqueId];
           if (product) {
             return { ...product, quantity };
           }
@@ -152,21 +152,16 @@ const SgrApp = () => {
       })
       .filter(Boolean);
 
-    setCartItems(currentCartItems => {
-        if (JSON.stringify(currentCartItems) !== JSON.stringify(newCartItems)) {
-            localStorage.setItem('cartItems', JSON.stringify(newCartItems));
-            return newCartItems;
-        }
-        return currentCartItems;
-    });
-  }, [productCounts, products, isInitialized]);
+    setCartItems(newCartItems);
+    localStorage.setItem('cartItems', JSON.stringify(newCartItems));
+  }, [productCounts, productsById, isInitialized]);
 
-  const setProductQuantity = useCallback((certificateNumber, quantity) => {
-    const newQty = Math.max(0, parseInt(quantity) || 0);
+  const setProductQuantity = useCallback((uniqueId, quantity) => {
+    const newQty = Math.max(0, parseInt(quantity, 10) || 0);
     setProductCounts((prev) => {
       const newCounts = {
         ...prev,
-        [certificateNumber]: newQty,
+        [uniqueId]: newQty,
       };
       
       localStorage.setItem('productCounts', JSON.stringify(newCounts));
@@ -222,8 +217,7 @@ const SgrApp = () => {
             <input
               type="text"
               className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => debouncedSetSearchTerm(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.target.blur();
@@ -241,70 +235,69 @@ const SgrApp = () => {
 
       {/* Основной контент */}
       <div className="main-container-wrapper">
-        <div className="main-container">
-          {/* Левая колонка - категории */}
-          <aside className="categories-sidebar">
-            <div className="categories-header">
-              <h3>Категории</h3>
-            </div>
-            <nav className="categories-nav">
+      <div className="main-container">
+        {/* Левая колонка - категории */}
+        <aside className="categories-sidebar">
+          <div className="categories-header">
+            <h3>Категории</h3>
+          </div>
+          <nav className="categories-nav">
+            <button
+              className={`category-item ${selectedCategory === "" ? "active" : ""}`}
+              onClick={() => setSelectedCategory("")}
+            >
+              {selectedCategory === "" && <span className="bullet"></span>}
+              Все категории
+            </button>
+            {categories.map((category, index) => (
               <button
-                className={`category-item ${!selectedCategory ? "active" : ""}`}
-                onClick={() => setSelectedCategory("")}
+                key={index}
+                className={`category-item ${
+                  selectedCategory === category ? "active" : ""
+                }`}
+                onClick={() => setSelectedCategory(category)}
               >
-                {!selectedCategory && <span className="bullet"></span>}
-                Все категории
-              </button>
-              {categories.map((category, index) => (
-                <button
-                  key={index}
-                  className={`category-item ${
-                    selectedCategory === category ? "active" : ""
-                  }`}
-                  onClick={() => setSelectedCategory(category)}
-                >
                   {selectedCategory === category && (
                     <span className="bullet"></span>
                   )}
-                  {category}
-                </button>
-              ))}
-            </nav>
-          </aside>
+                {category}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-          {/* Правая колонка - товары */}
-          <main className="products-content">
-            {filteredProducts.length === 0 ? (
+        {/* Правая колонка - товары */}
+        <main className="products-content">
+          {filteredProducts.length === 0 ? (
                 searchTerm ? (
                   <div className="empty-search-results">
                     <EmptyIcon />
                     <h3>К сожалению, по вашему запросу ничего не найдено</h3>
                     <p>Убедитесь, что все слова написаны правильно или попробуйте использовать другие ключевые слова.</p>
-                  </div>
+            </div>
                 ) : (
                   <div className="empty-state">
                     Нет данных для отображения
                   </div>
                 )
-            ) : (
-              <div className="products-list">
-                {filteredProducts.map((product) => (
+          ) : (
+            <div className="products-list">
+                {filteredProducts.map((product, idx) => (
                   <ProductCard
-                    key={product.certificateNumber}
+                    key={product.uniqueId}
+                    index={idx}
                     product={product}
-                    isExpanded={expandedProducts.has(product.certificateNumber)}
-                    count={productCounts[product.certificateNumber] || 0}
+                    count={productCounts[product.uniqueId] || 0}
                     tags={getProductTags(product)}
-                    onToggle={toggleProduct}
                     onUpdateCount={updateProductCount}
                     onSetQuantity={setProductQuantity}
                     onAddToCart={addToCart}
                   />
                 ))}
-              </div>
-            )}
-          </main>
-        </div>
+            </div>
+          )}
+        </main>
+      </div>
       </div>
 
       <Cart 
@@ -313,6 +306,7 @@ const SgrApp = () => {
         onClose={closeCart}
         cartItems={cartItems}
         onUpdateCount={updateProductCount}
+        onSetQuantity={setProductQuantity}
         onClearCart={clearCart}
       />
     </div>

@@ -4,16 +4,21 @@ import CartIcon from './assets/cart-icon';
 
 const ProductCard = React.memo(({
   product,
-  isExpanded,
+  index,
+  isExpanded: isExpandedProp,
   count,
-  onToggle,
+  onToggle: onToggleProp,
   onUpdateCount,
   onSetQuantity,
   onAddToCart,
   tags
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingQty, setIsEditingQty] = useState(false);
   const [tempQty, setTempQty] = useState(count.toString());
+  
+  const isCardExpanded = isExpandedProp !== undefined ? isExpandedProp : isExpanded;
+  const onToggle = onToggleProp ? () => onToggleProp(`${product.productName}-${index}`) : () => setIsExpanded(!isExpanded);
 
   const handleQtyClick = (e) => {
     e.stopPropagation();
@@ -26,13 +31,13 @@ const ProductCard = React.memo(({
   };
 
   const handleQtyBlur = () => {
-    onSetQuantity(product.certificateNumber, tempQty);
+    onSetQuantity(product.uniqueId, tempQty);
     setIsEditingQty(false);
   };
-  
+
   const handleQtyKeyDown = (e) => {
     if (e.key === 'Enter') {
-      onSetQuantity(product.certificateNumber, tempQty);
+      onSetQuantity(product.uniqueId, tempQty);
       setIsEditingQty(false);
     }
   };
@@ -46,11 +51,11 @@ const ProductCard = React.memo(({
   return (
     <div className="product-card">
       <div
-        className={`product-header ${isExpanded ? "expanded" : ""}`}
-        onClick={() => onToggle(product.certificateNumber)}
+        className={`product-header ${isCardExpanded ? "expanded" : ""}`}
+        onClick={onToggle}
       >
         <div className="product-main-info">
-          <span className={`expand-icon ${isExpanded ? "rotated" : ""}`}>
+          <span className={`expand-icon ${isCardExpanded ? "rotated" : ""}`}>
             <ExpandIcon />
           </span>
           <span className="product-title">{product.productName}</span>
@@ -58,8 +63,8 @@ const ProductCard = React.memo(({
 
         <div className="product-controls">
           <div className="tags">
-            {tags.map((tag, index) => (
-              <span key={index} className="product-tag">{tag}</span>
+            {tags.map((tag, i) => (
+              <span key={i} className="product-tag">{tag}</span>
             ))}
           </div>
 
@@ -68,7 +73,7 @@ const ProductCard = React.memo(({
               className="qty-btn minus"
               onClick={(e) => {
                 e.stopPropagation();
-                onUpdateCount(product.certificateNumber, false);
+                onUpdateCount(product.uniqueId, false);
               }}
             >
               −
@@ -93,7 +98,7 @@ const ProductCard = React.memo(({
               className="qty-btn plus"
               onClick={(e) => {
                 e.stopPropagation();
-                onUpdateCount(product.certificateNumber, true);
+                onUpdateCount(product.uniqueId, true);
               }}
             >
               +
@@ -111,7 +116,7 @@ const ProductCard = React.memo(({
         </div>
       </div>
 
-      <div className={`product-details ${isExpanded ? "expanded" : ""}`}>
+      <div className={`product-details ${isCardExpanded ? "expanded" : ""}`}>
         <div className="details-grid">
             <div className="detail-row">
                 <span className="detail-label">Форма выпуска</span>

@@ -30,7 +30,7 @@ export const phoneFormatter = (phone) => {
       }
     } else {
         formattedInputValue = "+" + value;
-    }
+      }
     let text = formattedInputValue;
     return text;
   };

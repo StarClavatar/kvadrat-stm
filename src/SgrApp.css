@@ -374,6 +374,12 @@ body {
   text-align: center;
   font-size: 16px;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-bottom: 1px solid transparent;
+}
+
+.qty-display:hover {
+  border-bottom: 1px dashed #333;
 }
 
 .qty-input {
@@ -387,6 +393,11 @@ body {
   background: transparent;
   outline: none;
   -moz-appearance: textfield;
+}
+
+.qty-input.cart {
+    width: 60px;
+    background: #fff;
 }
 
 .qty-input::-webkit-outer-spin-button,
@@ -415,17 +426,35 @@ body {
   transform: scale(1.2);
 }
 
-/* Детали товара */
-.product-details {
-  padding: 0 20px;
-  max-height: 0;
+    /* Детали товара */
+    .product-details {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease-in-out;
+    }
+    
+    .product-details.expanded {
+      grid-template-rows: 1fr;
+    }
+    
+    .product-details .details-grid {
+      overflow: hidden;
+      /* Начальное состояние паддинга для анимации */
+      padding: 0 20px;
+      transition: padding 0.3s ease-in-out;
+    }
+    
+    .product-details.expanded .details-grid {
+      /* Конечное состояние паддинга */
+      padding: 20px 24px;
+    }
+
+.product-details .details-grid {
   overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.6s ease;
 }
 
-.product-details.expanded {
-  max-height: 1500px;
-  padding: 20px;
+.product-details.expanded .details-grid {
+  padding: 20px 24px;
 }
 
 .details-grid {
@@ -657,6 +686,13 @@ body {
   margin-top: 15px;
 }
 
+.submission-error-message {
+    color: #f02325;
+    font-size: 14px;
+    margin-top: 15px;
+    text-align: center;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -764,7 +800,7 @@ body {
   align-items: center;
   background: #f5f5f5;
   border-radius: 20px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .cart-qty-btn {
@@ -792,6 +828,28 @@ body {
   min-width: 40px;
   text-align: center;
   font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom 0.2s ease;
+}
+
+.cart-qty-display:hover {
+  border-bottom: 1px dashed #333;
+}
+
+.cart-item-remove-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s ease;
+}
+
+.cart-item-remove-btn:hover {
+  color: #333;
 }
 
 .cart-submit-btn {
@@ -916,4 +974,8 @@ body {
 }
 @keyframes l16 { 
   100%{transform: rotate(1turn)}
+}
+
+.product-controls .qty-btn.plus:hover {
+  background-color: #f0f0f0;
 }
