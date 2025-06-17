@@ -67,11 +67,14 @@ const ProductCard = React.memo(
 
           <div className="product-controls">
             <div className="tags">
-              {tags.map((tag, i) => (
+              {/* {tags.map((tag, i) => (
                 <span key={i} className="product-tag">
                   {tag}
                 </span>
-              ))}
+              ))} */}
+              <span className="product-tag">
+                {product.releaseForm}
+              </span>
             </div>
 
             <div className="quantity-controls">
@@ -88,7 +91,7 @@ const ProductCard = React.memo(
                 <input
                   type="number"
                   className="qty-input"
-                  value={tempQty}
+                  value={tempQty !== "0" ? tempQty : ""}
                   onChange={handleQtyChange}
                   onBlur={handleQtyBlur}
                   onKeyDown={handleQtyKeyDown}
@@ -116,7 +119,7 @@ const ProductCard = React.memo(
                   onAddToCart();
                 }}
               >
-                <CartIcon />
+                <CartIcon hasItems={count > 0} />
               </button>
             </div>
           </div>
@@ -144,7 +147,7 @@ const ProductCard = React.memo(
             </div>
 
             <div className="detail-row">
-              <span className="detail-label">Продукция</span>
+              <span className="detail-label">Наименование продукции</span>
               <span className="detail-value">
                 {product.productName}
               </span>
@@ -173,7 +176,7 @@ const ProductCard = React.memo(
 
             {product.usageRecommendations && (
               <div className="detail-row full-width">
-                <span className="detail-label">Протоколы исследований</span>
+                <span className="detail-label">Приём, рекомендации по применению</span>
                 <span className="detail-value">
                   {product.usageRecommendations}
                 </span>
@@ -192,6 +195,12 @@ const ProductCard = React.memo(
                   <span className="detail-value">{product.recipient}</span>
                 </div>
               )}
+            </div>
+            <div className="detail-row full-width">
+              <span className="detail-label">Категории</span>
+              <span className="detail-value">
+                {product.categories.join(", ")}
+              </span>
             </div>
           </div>
         </div>

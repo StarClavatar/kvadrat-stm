@@ -49,7 +49,13 @@ const Cart = React.memo(({
     console.log("Отправляемые данные:", JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch("/api/order-send-email", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const apiUrl = apiBaseUrl && apiBaseUrl !== ""
+        ? `${apiBaseUrl}/order-send-email`
+        : "/api/order-send-email";
+      
+      console.log('[API] Making request to:', apiUrl);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

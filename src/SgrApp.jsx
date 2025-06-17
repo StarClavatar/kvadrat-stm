@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { debounce, keyBy } from 'lodash';
 import { SearchIcon } from "./assets/search-icon";
+import CartIcon from "./assets/cart-icon";
 import "./SgrApp.css";
 import ProductCard from "./ProductCard";
 import Cart from "./Cart";
@@ -32,9 +33,13 @@ const SgrApp = () => {
     // Загружаем данные
     const loadData = async () => {
       try {
-        const response = await fetch(
-          "/api/sgr-info-get"
-        );
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+        const apiUrl = apiBaseUrl && apiBaseUrl !== ""
+          ? `${apiBaseUrl}/sgr-info-get`
+          : "/api/sgr-info-get";
+        
+        console.log('[API] Making request to:', apiUrl);
+        const response = await fetch(apiUrl);
         const responseData = await response.json();
 
         if (responseData.result === "success") {
@@ -186,16 +191,16 @@ const SgrApp = () => {
     }, 300);
   }, []);
 
-  const getProductTags = useCallback((product) => {
-    const tags = [];
-    if (product.categories && product.categories.length > 0) {
-      tags.push(product.categories[0]);
-    }
-    if (product.releaseForm) {
-      tags.push(product.releaseForm);
-    }
-    return tags;
-  }, []);
+  // const getProductTags = useCallback((product) => {
+  //   const tags = [];
+  //   if (product.categories && product.categories.length > 0) {
+  //     tags.push(product.categories[0]);
+  //   }
+  //   if (product.releaseForm) {
+  //     tags.push(product.releaseForm);
+  //   }
+  //   return tags;
+  // }, []);
 
   const filteredProducts = getFilteredProducts();
 
@@ -212,22 +217,33 @@ const SgrApp = () => {
       {/* Поиск */}
       <div className="search-section">
         <div className="search-container">
-          <h2 className="search-title">Рецептуры СТМ</h2>
-          <div className="input-container">
-            <input
-              type="text"
-              className="search-input"
-              onChange={(e) => debouncedSetSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.target.blur();
-                }
-              }}
-              placeholder="Поиск"
-            />
-            <span className="search-icon">
-              <SearchIcon />
-            </span>
+          <h2 className="search-title">Действующие СГР</h2>
+          <div className="header-controls">
+            <div className="input-container">
+              <input
+                type="text"
+                className="search-input"
+                onChange={(e) => debouncedSetSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.target.blur();
+                  }
+                }}
+                placeholder="Поиск"
+              />
+              <span className="search-icon">
+                <SearchIcon />
+              </span>
+            </div>
+            <button 
+              className="floating-cart-btn" 
+              onClick={() => setIsCartOpen(true)}
+            >
+              <CartIcon hasItems={cartItems.length > 0} />
+              {cartItems.length > 0 && (
+                <span className="cart-badge">{cartItems.length}</span>
+              )}
+            </button>
           </div>
           {/* <img src={searchBg} alt="" className='search-bg'/> */}
         </div>
@@ -288,7 +304,7 @@ const SgrApp = () => {
                     index={idx}
                     product={product}
                     count={productCounts[product.uniqueId] || 0}
-                    tags={getProductTags(product)}
+                    // tags={getProductTags(product)}
                     onUpdateCount={updateProductCount}
                     onSetQuantity={setProductQuantity}
                     onAddToCart={addToCart}

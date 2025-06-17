@@ -6,5 +6,5 @@ import SgrApp from './SgrApp.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <SgrApp />
-  </StrictMode>,
+  </StrictMode>
 )
