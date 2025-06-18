@@ -30,6 +30,6 @@ export default defineConfig(({ mode }) => {
     preview: {
       // Прокси для preview режима тоже
       ...((!env.VITE_API_BASE_URL || env.VITE_API_BASE_URL === '') && proxyConfig),
-    },
+  },
   }
 })

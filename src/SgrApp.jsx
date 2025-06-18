@@ -217,7 +217,7 @@ const SgrApp = () => {
       {/* Поиск */}
       <div className="search-section">
         <div className="search-container">
-          <h2 className="search-title">Действующие СГР</h2>
+          <h2 className="search-title">Зарегистрированные рецептуры</h2>
           <div className="header-controls">
             <div className="input-container">
               <input

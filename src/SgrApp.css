@@ -1,10 +1,12 @@
 /* Основные стили для СГР приложения */
 html {
-  height: 100%;
+  height: auto;
 }
 
 body {
   background-color: rgba(222, 242, 231, 1);
+  height: auto;
+  overflow-x: hidden;
 }
 
 .sgr-app {
@@ -12,6 +14,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
   background-color: #def2e7;
+  height: auto;
+  min-height: 100vh;
 }
 
 .loading {
@@ -21,7 +25,7 @@ body {
   height: 200px;
   font-size: 18px;
   color: #666;
-  padding-bottom: 20px
+  padding-bottom: 20px;
 }
 
 /* Секция поиска */
@@ -44,18 +48,20 @@ body {
   justify-content: center;
   flex-direction: column;
   padding: clamp(
-    48px,
-    calc(48px + (88 - 48) * ((100vw - 768px) / (1920 - 768))),
-    88px
-  ) clamp(
-    20px,
-    calc(20px + (83 - 20) * ((100vw - 768px) / (1920 - 768))),
-    83px
-  );
+      48px,
+      calc(48px + (88 - 48) * ((100vw - 768px) / (1920 - 768))),
+      88px
+    )
+    clamp(
+      20px,
+      calc(20px + (83 - 20) * ((100vw - 768px) / (1920 - 768))),
+      83px
+    );
   background-image: url("./assets/search-bg.png");
   background-size: contain;
   background-position: right;
   background-repeat: no-repeat;
+  position: relative;
 }
 
 .search-title {
@@ -64,7 +70,6 @@ body {
     calc(36px + (92 - 36) * ((100vw - 768px) / (1920 - 768))),
     92px
   );
-  /* line-height: 70px; */
   color: #fff;
   margin: 0;
   margin-bottom: clamp(
@@ -72,6 +77,35 @@ body {
     calc(32px + (72 - 32) * ((100vw - 768px) / (1920 - 768))),
     72px
   );
+}
+
+.floating-cart-wrapper {
+  position: absolute;
+  top: 50%;
+  right: clamp(20px, calc(20px + (83 - 20) * ((100vw - 768px) / (1920 - 768))), 83px);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-cart-prompt {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-align: right;
+  max-width: 200px;
+  line-height: 1.4;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.floating-cart-wrapper:hover .header-cart-prompt {
+  color: #fff;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .header-controls {
@@ -92,7 +126,6 @@ body {
 .search-input {
   width: 100%;
   max-width: 600px;
-
   padding: 2px 0 27px 0;
   border: none;
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
@@ -118,7 +151,11 @@ body {
 
 .floating-cart-btn {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.05)
+  );
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 12px;
@@ -134,7 +171,11 @@ body {
 }
 
 .floating-cart-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.1)
+  );
   border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -167,7 +208,7 @@ body {
 .main-container-wrapper {
   display: flex;
   justify-content: center;
-  padding: 0 12px;
+  padding: 0 12px 12px;
   height: 100%;
 }
 
@@ -477,7 +518,7 @@ body {
   justify-content: center;
   transition: 0.2s ease;
   font-size: 14px;
-  margin-left: 20px;
+  margin-left: 6px;
   background-color: transparent;
 }
 
@@ -1054,3 +1095,34 @@ body {
 .product-controls .qty-btn.plus:hover {
   background-color: #f0f0f0;
 }
+.add-to-cart-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.add-to-cart-btn.in-cart {
+    background-color: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #1e4620;
+}.add-to-cart-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.add-to-cart-btn.in-cart:hover {
+    background-color: #dceddd;
+}
+
+.add-to-cart-text {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+

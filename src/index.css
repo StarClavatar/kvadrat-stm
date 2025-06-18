@@ -20,15 +20,18 @@
   box-sizing: border-box;
 }
 
-body {
+/* Для корректной работы в iframe - убираем фиксированную высоту */
+html, body {
   margin: 0;
   padding: 0;
-  min-height: 100%;
+  height: auto;
+  overflow-x: hidden; /* Убираем горизонтальный скролл */
   background-color: #f8f9fa;
 }
 
 #root {
-  min-height: 100%;
+  height: auto;
+  min-height: 100vh; /* Минимальная высота экрана, но может быть больше */
 }
 
 /* Базовые стили для всех элементов */
