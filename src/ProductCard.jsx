@@ -7,12 +7,13 @@ const ProductCard = React.memo(
     product,
     index,
     isExpanded: isExpandedProp,
-    count,
     onToggle: onToggleProp,
+    enableQuantitySystem = false,
+    isInCart,
+    onAddToCart,
+    count = 0,
     onUpdateCount,
     onSetQuantity,
-    onAddToCart,
-    tags,
   }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditingQty, setIsEditingQty] = useState(false);
@@ -23,6 +24,11 @@ const ProductCard = React.memo(
     const onToggle = onToggleProp
       ? () => onToggleProp(`${product.productName}-${index}`)
       : () => setIsExpanded(!isExpanded);
+
+    const handleAddToCart = (e) => {
+      e.stopPropagation();
+      onAddToCart(product.uniqueId);
+    };
 
     const handleQtyClick = (e) => {
       e.stopPropagation();
@@ -67,61 +73,65 @@ const ProductCard = React.memo(
 
           <div className="product-controls">
             <div className="tags">
-              {/* {tags.map((tag, i) => (
-                <span key={i} className="product-tag">
-                  {tag}
-                </span>
-              ))} */}
               <span className="product-tag">
                 {product.releaseForm}
               </span>
             </div>
 
-            <div className="quantity-controls">
+            {enableQuantitySystem ? (
+              // Старая система с количествами
+              <div className="quantity-controls">
+                <button
+                  className="qty-btn minus"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateCount(product.uniqueId, false);
+                  }}
+                >
+                  −
+                </button>
+                {isEditingQty ? (
+                  <input
+                    type="number"
+                    className="qty-input"
+                    value={tempQty !== "0" ? tempQty : ""}
+                    onChange={handleQtyChange}
+                    onBlur={handleQtyBlur}
+                    onKeyDown={handleQtyKeyDown}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span className="qty-display" onClick={handleQtyClick}>
+                    {count}
+                  </span>
+                )}
+                <button
+                  className="qty-btn plus"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateCount(product.uniqueId, true);
+                  }}
+                >
+                  +
+                </button>
+                <button
+                  className="remove-btn"
+                  onClick={handleAddToCart}
+                >
+                  <CartIcon hasItems={count > 0} />
+                </button>
+              </div>
+            ) : (
+              // Новая система с простой кнопкой
               <button
-                className="qty-btn minus"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateCount(product.uniqueId, false);
-                }}
+                className={`remove-btn ${isInCart ? "in-cart" : ""}`}
+                onClick={handleAddToCart}
               >
-                −
+                <CartIcon hasItems={isInCart} />
+                <span>{isInCart ? "В корзине" : "В корзину"}</span>
               </button>
-              {isEditingQty ? (
-                <input
-                  type="number"
-                  className="qty-input"
-                  value={tempQty !== "0" ? tempQty : ""}
-                  onChange={handleQtyChange}
-                  onBlur={handleQtyBlur}
-                  onKeyDown={handleQtyKeyDown}
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <span className="qty-display" onClick={handleQtyClick}>
-                  {count}
-                </span>
-              )}
-              <button
-                className="qty-btn plus"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateCount(product.uniqueId, true);
-                }}
-              >
-                +
-              </button>
-              <button
-                className="remove-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCart();
-                }}
-              >
-                <CartIcon hasItems={count > 0} />
-              </button>
-            </div>
+            )}
           </div>
         </div>
 

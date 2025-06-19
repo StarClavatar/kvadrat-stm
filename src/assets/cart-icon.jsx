@@ -6,13 +6,13 @@ const CartIcon = ({ hasItems = false }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
       fill={fillColor}
       height="20px"
       width="20px"
       version="1.1"
       viewBox="0 0 512 512"
-      enable-background="new 0 0 512 512"
+      enableBackground="new 0 0 512 512"
     >
       <g>
         <g>

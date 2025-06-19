@@ -4,6 +4,9 @@ import ArrowIconButton from "./assets/arrow-icon-button";
 import { phoneFormatter } from './assets/phoneFormatter';
 import ThankYouView from './ThankYouView';
 
+// Флаг для включения/выключения редактирования количества
+const ENABLE_QUANTITY_EDITING = false;
+
 const Cart = React.memo(({ 
   isOpen, 
   isClosing, 
@@ -11,6 +14,7 @@ const Cart = React.memo(({
   cartItems,
   onUpdateCount,
   onSetQuantity,
+  onRemoveItem,
   onClearCart
 }) => {
   const [activeView, setActiveView] = useState('cart'); // 'cart', 'form', 'success'
@@ -36,7 +40,7 @@ const Cart = React.memo(({
     const payload = {
       contactInfo: {
         // !!!ВАЖНО: Замените этот email на реальный адрес получателя заявок!!!
-        email_to: "clavatar@yandex.ru", 
+        email_to: "stm@kvadrat-c.ru", 
         ...data
       },
       order: cartItems.map(item => ({
@@ -172,36 +176,46 @@ const Cart = React.memo(({
                           <div className="cart-item-name">{item.productName}</div>
                         </div>
                         <div className="cart-item-controls">
-                          <button
-                            className="cart-qty-btn minus"
-                            onClick={() => onUpdateCount(item.uniqueId, false)}
-                          >
-                            −
-                          </button>
-                          {editingItem === item.uniqueId ? (
-                            <input
-                              type="number"
-                              className="qty-input cart"
-                              value={tempQty}
-                              onChange={handleQtyChange}
-                              onBlur={handleQtyBlur}
-                              onKeyDown={handleQtyKeyDown}
-                              autoFocus
-                            />
+                          {ENABLE_QUANTITY_EDITING && (
+                            <button
+                              className="cart-qty-btn minus"
+                              onClick={() => onUpdateCount(item.uniqueId, false)}
+                            >
+                              −
+                            </button>
+                          )}
+                          {ENABLE_QUANTITY_EDITING ? (
+                            editingItem === item.uniqueId ? (
+                              <input
+                                type="number"
+                                className="qty-input cart"
+                                value={tempQty}
+                                onChange={handleQtyChange}
+                                onBlur={handleQtyBlur}
+                                onKeyDown={handleQtyKeyDown}
+                                autoFocus
+                              />
+                            ) : (
+                              <span className="cart-qty-display" onClick={() => handleQtyClick(item)}>
+                                {item.quantity}
+                              </span>
+                            )
                           ) : (
-                            <span className="cart-qty-display" onClick={() => handleQtyClick(item)}>
+                            <span className="cart-qty-display-readonly">
                               {item.quantity}
                             </span>
                           )}
-                          <button
-                            className="cart-qty-btn plus"
-                            onClick={() => onUpdateCount(item.uniqueId, true)}
-                          >
-                            +
-                          </button>
+                          {ENABLE_QUANTITY_EDITING && (
+                            <button
+                              className="cart-qty-btn plus"
+                              onClick={() => onUpdateCount(item.uniqueId, true)}
+                            >
+                              +
+                            </button>
+                          )}
                           <button 
                             className="cart-item-remove-btn"
-                            onClick={() => onSetQuantity(item.uniqueId, 0)}
+                            onClick={() => onRemoveItem(item.uniqueId)}
                           >
                             ×
                           </button>
