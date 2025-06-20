@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { debounce, keyBy } from 'lodash';
 import { SearchIcon } from "./assets/search-icon";
 import CartIcon from "./assets/cart-icon";
@@ -8,6 +8,7 @@ import Cart from "./Cart";
 import EmptyIcon from "./assets/empty-icon";
 import MenuIcon from './assets/menu-icon';
 import CategoryModal from './CategoryModal';
+import IconX from "./assets/Icon-x";
 
 // Флаг для включения/выключения системы количеств в карточках
 const ENABLE_QUANTITY_IN_CARDS = false;
@@ -33,7 +34,18 @@ const SgrApp = () => {
   // Refs and state for the sticky sidebar logic
   const sidebarRef = useRef(null);
   const sidebarPlaceholderRef = useRef(null);
+  const mainContentRef = useRef(null);
   const [isSidebarFixed, setIsSidebarFixed] = useState(false);
+  const [isDesktopView, setIsDesktopView] = useState(window.innerWidth > 1024);
+
+  useEffect(() => {
+    const checkView = () => {
+      setIsDesktopView(window.innerWidth > 1024);
+    };
+    window.addEventListener("resize", checkView);
+    checkView(); // Initial check
+    return () => window.removeEventListener("resize", checkView);
+  }, []);
 
   useEffect(() => {
     // Загружаем данные
@@ -111,21 +123,27 @@ const SgrApp = () => {
       }
 
       // Logic for sticky sidebar
-      if (sidebarRef.current && sidebarPlaceholderRef.current) {
+      if (isDesktopView && sidebarRef.current && sidebarPlaceholderRef.current && mainContentRef.current) {
         const placeholderTop = sidebarPlaceholderRef.current.getBoundingClientRect().top;
         const stickyHeaderHeight = 84; // Высота хедера + отступ
+        
+        const mainContentHeight = mainContentRef.current.offsetHeight;
+        const sidebarHeight = sidebarRef.current.offsetHeight;
+        const canBeSticky = mainContentHeight > sidebarHeight;
 
-        if (placeholderTop <= stickyHeaderHeight && !isSidebarFixed) {
+        if (canBeSticky && placeholderTop <= stickyHeaderHeight && !isSidebarFixed) {
           setIsSidebarFixed(true);
-        } else if (placeholderTop > stickyHeaderHeight && isSidebarFixed) {
+        } else if ((!canBeSticky || placeholderTop > stickyHeaderHeight) && isSidebarFixed) {
           setIsSidebarFixed(false);
         }
+      } else if (isSidebarFixed) {
+          setIsSidebarFixed(false);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isSidebarFixed]);
+  }, [isSidebarFixed, isDesktopView]);
 
   const debouncedSetSearchTerm = useCallback(debounce(setSearchTerm, 300), []);
 
@@ -135,48 +153,47 @@ const SgrApp = () => {
     debouncedSetSearchTerm(value);
   };
 
-  const getFilteredData = () => {
-    let filteredProducts = products;
-    let availableCategories = categories;
-
-    // 1. Фильтруем товары по поисковому запросу
-    if (searchTerm) {
-      const lowercasedTerm = searchTerm.toLowerCase();
-      filteredProducts = products.filter(
-        (product) =>
-          product.productName?.toLowerCase().includes(lowercasedTerm) ||
-          product.certificateNumber?.toLowerCase().includes(lowercasedTerm) ||
-          product.manufacturer?.toLowerCase().includes(lowercasedTerm) ||
-          product.activeSubstances?.toLowerCase().includes(lowercasedTerm) ||
-          product.applicationArea?.toLowerCase().includes(lowercasedTerm)
-      );
-
-      // 2. На основе отфильтрованных товаров, создаем новый список доступных категорий
-      const activeCategories = new Set();
-      filteredProducts.forEach((product) => {
-        if (product.categories && Array.isArray(product.categories)) {
-          product.categories.forEach((category) => {
-            if (category && category.trim()) {
-              activeCategories.add(category.trim());
-            }
-          });
-        }
-      });
-      availableCategories = [...activeCategories].sort();
-    }
-
-    // 3. Фильтруем товары по ВЫБРАННОЙ категории
-    if (selectedCategory) {
-      filteredProducts = filteredProducts.filter(
-        (product) =>
-          product.categories && product.categories.includes(selectedCategory)
-      );
-    }
-
-    return { filteredProducts, availableCategories };
+  const handleClearSearch = () => {
+    setInputValue('');
+    setSearchTerm('');
   };
 
-  const { filteredProducts, availableCategories } = getFilteredData();
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products;
+
+    // 1. Фильтруем по выбранной категории
+    if (selectedCategory) {
+      filtered = filtered.filter(p =>
+        p.categories && p.categories.includes(selectedCategory)
+      );
+    }
+
+    // 2. Если нет поискового запроса, просто сортируем по имени и возвращаем
+    if (!searchTerm.trim()) {
+      return [...filtered].sort((a, b) => (a.productName || '').localeCompare(b.productName || ''));
+    }
+    
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+
+    // 3. Находим совпадения по названию продукта
+    const nameMatches = filtered.filter(p =>
+      p.productName?.toLowerCase().includes(lowercasedSearchTerm)
+    );
+
+    // 4. Находим совпадения по составу (я предполагаю, что это поле 'activeSubstances'),
+    //    исключая те, что уже найдены по имени.
+    const compositionMatches = filtered.filter(p =>
+      !p.productName?.toLowerCase().includes(lowercasedSearchTerm) &&
+      p.activeSubstances?.toLowerCase().includes(lowercasedSearchTerm)
+    );
+
+    // 5. Сортируем обе группы по названию продукта
+    nameMatches.sort((a, b) => (a.productName || '').length - (b.productName || '').length);
+    compositionMatches.sort((a, b) => (a.productName || '').length - (b.productName || '').length);
+
+    // 6. Объединяем результаты
+    return [...nameMatches, ...compositionMatches];
+  }, [products, selectedCategory, searchTerm]);
 
   const addToCart = useCallback((uniqueId) => {
     const product = productsById[uniqueId];
@@ -331,13 +348,25 @@ const SgrApp = () => {
           >
             <MenuIcon />
           </button>
-          <input
-            type="text"
-            className="sticky-search-input"
-            value={inputValue}
-            onChange={handleSearchChange}
-            placeholder="Поиск по рецептурам..."
-          />
+          <div className="sticky-search-input-wrapper">
+            
+            <input
+              type="text"
+              className="sticky-search-input"
+              value={inputValue}
+              onChange={handleSearchChange}
+              placeholder="Поиск по рецептурам..."
+            />
+            {inputValue ? (
+              <button className="clear-search-btn" onClick={handleClearSearch}>
+                <IconX />
+              </button>
+            ) : (
+              <span className="search-icon">
+                <SearchIcon />
+              </span>
+            )}
+          </div>
           <button 
             className="sticky-cart-btn" 
             onClick={() => setIsCartOpen(true)}
@@ -364,9 +393,15 @@ const SgrApp = () => {
                 onChange={handleSearchChange}
                 placeholder="Поиск"
               />
-              <span className="search-icon">
-                <SearchIcon />
-              </span>
+              {inputValue ? (
+                <button className="clear-search-btn" onClick={handleClearSearch}>
+                  <IconX />
+                </button>
+              ) : (
+                <span className="search-icon">
+                  <SearchIcon />
+                </span>
+              )}
             </div>
             <button
               className="floating-cart-btn"
@@ -393,12 +428,15 @@ const SgrApp = () => {
               <nav className="categories-nav">
                 <button
                   className={`category-item ${selectedCategory === "" ? "active" : ""}`}
-                  onClick={() => setSelectedCategory("")}
+                  onClick={() => {
+                    setSelectedCategory("");
+                    handleClearSearch();
+                  }}
                 >
                   {selectedCategory === "" && <span className="bullet"></span>}
                   Все категории
                 </button>
-                {availableCategories.map((category, index) => (
+                {categories.map((category, index) => (
                   <button
                     key={index}
                     className={`category-item ${
@@ -417,8 +455,8 @@ const SgrApp = () => {
           </div>
 
           {/* Правая колонка - товары */}
-          <main className="products-content">
-            {filteredProducts.length === 0 ? (
+          <main ref={mainContentRef} className="products-content">
+            {filteredAndSortedProducts.length === 0 ? (
                   searchTerm ? (
                     <div className="empty-search-results">
                       <EmptyIcon />
@@ -432,7 +470,7 @@ const SgrApp = () => {
                   )
             ) : (
               <div className="products-list">
-                  {filteredProducts.map((product, idx) => (
+                  {filteredAndSortedProducts.map((product, idx) => (
                     <ProductCard
                       key={product.uniqueId}
                       index={idx}
@@ -467,7 +505,7 @@ const SgrApp = () => {
       <CategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
-        categories={availableCategories}
+        categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />

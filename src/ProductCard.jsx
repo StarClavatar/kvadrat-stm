@@ -80,48 +80,48 @@ const ProductCard = React.memo(
 
             {enableQuantitySystem ? (
               // Старая система с количествами
-              <div className="quantity-controls">
-                <button
-                  className="qty-btn minus"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpdateCount(product.uniqueId, false);
-                  }}
-                >
-                  −
-                </button>
-                {isEditingQty ? (
-                  <input
-                    type="number"
-                    className="qty-input"
-                    value={tempQty !== "0" ? tempQty : ""}
-                    onChange={handleQtyChange}
-                    onBlur={handleQtyBlur}
-                    onKeyDown={handleQtyKeyDown}
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <span className="qty-display" onClick={handleQtyClick}>
-                    {count}
-                  </span>
-                )}
-                <button
-                  className="qty-btn plus"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpdateCount(product.uniqueId, true);
-                  }}
-                >
-                  +
-                </button>
-                <button
-                  className="remove-btn"
+            <div className="quantity-controls">
+              <button
+                className="qty-btn minus"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateCount(product.uniqueId, false);
+                }}
+              >
+                −
+              </button>
+              {isEditingQty ? (
+                <input
+                  type="number"
+                  className="qty-input"
+                  value={tempQty !== "0" ? tempQty : ""}
+                  onChange={handleQtyChange}
+                  onBlur={handleQtyBlur}
+                  onKeyDown={handleQtyKeyDown}
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className="qty-display" onClick={handleQtyClick}>
+                  {count}
+                </span>
+              )}
+              <button
+                className="qty-btn plus"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateCount(product.uniqueId, true);
+                }}
+              >
+                +
+              </button>
+              <button
+                className="remove-btn"
                   onClick={handleAddToCart}
-                >
-                  <CartIcon hasItems={count > 0} />
-                </button>
-              </div>
+              >
+                <CartIcon hasItems={count > 0} />
+              </button>
+            </div>
             ) : (
               // Новая система с простой кнопкой
               <button

@@ -204,6 +204,12 @@ body {
   margin: 0 auto;
 }
 
+.sticky-search-input-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 600px;
+}
+
 .sticky-search-input {
   flex: 1;
   max-width: 600px;
@@ -291,17 +297,47 @@ body {
   color: #fff;
 }
 
+.sticky-search-input {
+  width: 100%;
+}
+
 .search-input::placeholder {
   color: rgba(255, 255, 255, 0.3);
 }
 
 .search-icon {
   position: absolute;
-  right: 0;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 18px;
   color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 6px !important;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.clear-search-btn:hover {
+  transform: scale(1.2) translateY(-40%);
+  color: #fff;
 }
 
 .floating-cart-btn {
@@ -639,7 +675,7 @@ body {
   text-align: center;
   justify-content: center;
   /* max-width: 80px; */
-
+  
   font-size: 16px;
   background-color: #e7e7e7;
   border-radius: 4px;
@@ -650,8 +686,8 @@ body {
 }
 
 .qty-input.cart {
-  width: 60px;
-  background: #fff;
+    width: 60px;
+    background: #fff;
 }
 
 .qty-input::-webkit-outer-spin-button,
@@ -711,28 +747,28 @@ body {
   opacity: 1;
 }
 
-/* Детали товара */
-.product-details {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease-in-out;
-}
-
-.product-details.expanded {
-  grid-template-rows: 1fr;
-}
-
-.product-details .details-grid {
-  overflow: hidden;
-  /* Начальное состояние паддинга для анимации */
-  padding: 0 20px;
-  transition: padding 0.3s ease-in-out;
-}
-
-.product-details.expanded .details-grid {
-  /* Конечное состояние паддинга */
-  padding: 20px 24px;
-}
+    /* Детали товара */
+    .product-details {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease-in-out;
+    }
+    
+    .product-details.expanded {
+      grid-template-rows: 1fr;
+    }
+    
+    .product-details .details-grid {
+      overflow: hidden;
+      /* Начальное состояние паддинга для анимации */
+      padding: 0 20px;
+      transition: padding 0.3s ease-in-out;
+    }
+    
+    .product-details.expanded .details-grid {
+      /* Конечное состояние паддинга */
+      padding: 20px 24px;
+    }
 
 .product-details .details-grid {
   overflow: hidden;
@@ -795,6 +831,10 @@ body {
 
   .categories-sidebar.is-fixed {
     display: none;
+  }
+
+  .categories-sidebar {
+    display: block;
   }
 
   .categories-nav {
@@ -1007,10 +1047,10 @@ body {
 }
 
 .submission-error-message {
-  color: #f02325;
-  font-size: 14px;
-  margin-top: 15px;
-  text-align: center;
+    color: #f02325;
+    font-size: 14px;
+    margin-top: 15px;
+    text-align: center;
 }
 
 @keyframes slideIn {
@@ -1276,7 +1316,7 @@ body {
   animation: l16 1s infinite linear;
 }
 .loader::before,
-.loader::after {
+.loader::after {    
   content: "";
   grid-area: 1/1;
   margin: 2px;
@@ -1285,14 +1325,14 @@ body {
 }
 .loader::before {
   border-color: #f03355 #0000;
-  animation: inherit;
+  animation: inherit; 
   animation-duration: 0.5s;
   animation-direction: reverse;
 }
 .loader::after {
   margin: 8px;
 }
-@keyframes l16 {
+@keyframes l16 { 
   100% {
     transform: rotate(1turn);
   }
@@ -1303,36 +1343,36 @@ body {
 }
 
 .add-to-cart-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
 }
 
 .add-to-cart-btn.in-cart {
-  background-color: #e8f5e9;
-  border-color: #a5d6a7;
-  color: #1e4620;
+    background-color: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #1e4620;
 }
 
 .add-to-cart-btn:hover {
-  background-color: #e0e0e0;
+    background-color: #e0e0e0;
 }
 
 .add-to-cart-btn.in-cart:hover {
-  background-color: #dceddd;
+    background-color: #dceddd;
 }
 
 .add-to-cart-text {
-  font-weight: 500;
-  font-size: 14px;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .cart-qty-display-readonly {
